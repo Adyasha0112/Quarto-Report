@@ -1,0 +1,104 @@
+---
+title: "Proportion of Healthcare Facilities with Limited Healthcare Wastage Management Service"
+output: html_document
+---
+
+```{r}
+#| include=FALSE
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+library(rmarkdown)
+library(ggplot2)
+library(dplyr)
+library(maps)
+library(ggmap)
+library(tidyverse)
+library(gapminder)
+
+UnicefIndicator <- read_csv("UnicefIndicator.csv")
+
+
+# Load required libraries
+library(ggplot2)
+library(RColorBrewer)
+
+# Create a custom color palette with darker shades
+n_countries <- length(unique(UnicefIndicator$country))
+color_palette <- colorRampPalette(brewer.pal(9, "Blues"))(n_countries)
+colors <- setNames(color_palette, unique(UnicefIndicator$country))
+```
+
+```{r}
+# Create the bar chart object
+bar_chart <- ggplot(UnicefIndicator, aes(x = reorder(country, obs_value), y = obs_value, fill = country)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = colors) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  xlab("Country") +
+  ylab("Observation Value")
+# Show the bar chart
+print(bar_chart)
+```
+
+```{r}
+ggplot(UnicefIndicator, aes(x = country,  y = obs_value)) +
+  geom_col(stat = "identity") +
+  scale_fill_manual(values = colors) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  xlab("Country") +
+  ylab("Observation Value")
+```
+# **Bar Graph**
+The first graph shows the observation valuesin different countries.  According to the graph, the country with the highest number of observation value is Tanzania with 1625 observation value.  This means that the proportion of healthcare facilities with limited wastage management service is the highest in these countries.
+
+Similary, the countries with lowest number of observation values are: Czech Republic, Estonia and Macedonia which have observation value as 0. This means that the proportion of healthcare facilities with limited wastage management service is the least in these countries. 
+
+```{r}
+ggplot(UnicefIndicator) +
+  aes(x = time_period, y = obs_value) +
+  geom_line()
+```
+
+```{r}
+# **Map with countries**
+# Load required libraries
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(plotly)
+library(sf)
+library(dplyr)
+
+
+# Load required library
+library(readr)
+
+# Load data from the CSV file
+UnicefIndicator <- read_csv("UnicefIndicator.csv")
+
+# Load viridis package for additional color palettes
+library(viridis)
+
+# Get a spatial dataset of country boundaries
+world_map <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Make sure the 'country' column in your data frame UnicefIndicator is of type character
+UnicefIndicator$country <- as.character(UnicefIndicator$country)
+
+# Merge the main dataset (UnicefIndicator) with the world_map dataset
+merged_data <- world_map %>%
+  left_join(UnicefIndicator, by = c("name" = "country"))
+
+# Create a ggplot object with merged_data
+world_map_plot <- ggplot(data = merged_data) +
+  geom_sf(aes(fill = obs_value, text = paste("Obs_value:", obs_value, "<br>Country:", name)), size = 0.1) +
+  theme_minimal() +
+  scale_fill_gradient(low = "blue", high = "red", 
+                      name = "Observation\nValue", labels = scales::comma) +
+  labs()
+
+# Convert to interactive plotly object
+interactive_world_map <- ggplotly(world_map_plot)
+
+interactive_world_map
+```
+
